@@ -269,7 +269,11 @@ function exportJson() {
   a.download = 'clips.json';
   a.click();
   URL.revokeObjectURL(url);
-  showToast('clips.json downloaded');
+  // Clear draft so student page reads from the new clips.json after replacement
+  localStorage.removeItem(STORAGE_KEY);
+  const banner = document.getElementById('data-banner');
+  if (banner) banner.hidden = true;
+  showToast('clips.json downloaded — draft cleared');
 }
 
 /* ── Render All ── */
