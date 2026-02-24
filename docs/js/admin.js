@@ -21,6 +21,8 @@ let nextClipId = 1;
 /* ── localStorage Auto-Save ── */
 
 const STORAGE_KEY = 'batb-clips-draft';
+const JSONBIN_KEY_STORAGE = 'batb-jsonbin-key';
+const JSONBIN_API = 'https://api.jsonbin.io/v3/b';
 let saveTimeout = null;
 
 function saveToLocalStorage() {
@@ -59,6 +61,20 @@ async function init() {
     }
   }
 
+  // JSONBin master key prompt (stored in localStorage, persists across sessions)
+  if (config.jsonBinId && !localStorage.getItem(JSONBIN_KEY_STORAGE)) {
+    const key = prompt('Enter your JSONBin.io X-Master-Key (from your dashboard):');
+    if (key && key.trim()) {
+      localStorage.setItem(JSONBIN_KEY_STORAGE, key.trim());
+    }
+  }
+
+  // Hide Publish button if no bin ID configured
+  if (!config.jsonBinId) {
+    const publishBtn = document.getElementById('btn-publish');
+    if (publishBtn) publishBtn.hidden = true;
+  }
+
   // Audio events
   audio.addEventListener('loadedmetadata', () => {
     scrubberDuration = audio.duration || 0;
@@ -74,8 +90,11 @@ async function init() {
     updateScrubberUI();
   });
 
-  // Load data — check localStorage draft first, then fall back to clips.json
+  // Load data — priority: localStorage draft > JSONBin cloud > clips.json file
   let loadedFromDraft = false;
+  let loadedFromCloud = false;
+
+  // 1. Check localStorage draft first (crash recovery / unsaved edits)
   try {
     const draft = localStorage.getItem(STORAGE_KEY);
     if (draft) {
@@ -87,7 +106,26 @@ async function init() {
     }
   } catch (e) { /* ignore parse errors */ }
 
-  if (!loadedFromDraft) {
+  // 2. If no draft, try JSONBin cloud
+  if (!loadedFromDraft && config.jsonBinId) {
+    try {
+      const headers = {};
+      const masterKey = localStorage.getItem(JSONBIN_KEY_STORAGE);
+      if (masterKey) headers['X-Master-Key'] = masterKey;
+      const resp = await fetch(`${JSONBIN_API}/${config.jsonBinId}?meta=false`, { headers });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const raw = await resp.json();
+      songs = raw.songs || [];
+      parts = raw.parts || [];
+      clips = raw.clips || [];
+      loadedFromCloud = true;
+    } catch (err) {
+      console.warn('JSONBin fetch failed, trying clips.json fallback:', err);
+    }
+  }
+
+  // 3. Fallback to local clips.json file
+  if (!loadedFromDraft && !loadedFromCloud) {
     try {
       const resp = await fetch('./data/clips.json');
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -168,31 +206,59 @@ function setupTabs() {
 
 function setupToolbar() {
   document.getElementById('btn-export-json')?.addEventListener('click', exportJson);
+  document.getElementById('btn-publish')?.addEventListener('click', publishToJsonBin);
 
   document.getElementById('btn-reset-published')?.addEventListener('click', async () => {
-    if (!confirm('Discard local draft and reload from published clips.json?')) return;
+    if (!confirm('Discard local draft and reload from published data?')) return;
     localStorage.removeItem(STORAGE_KEY);
-    try {
-      const resp = await fetch('./data/clips.json');
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const raw = await resp.json();
-      if (Array.isArray(raw)) {
-        loadLegacy(raw);
-      } else {
+
+    let loaded = false;
+
+    // Try JSONBin first
+    if (config.jsonBinId) {
+      try {
+        const headers = {};
+        const masterKey = localStorage.getItem(JSONBIN_KEY_STORAGE);
+        if (masterKey) headers['X-Master-Key'] = masterKey;
+        const resp = await fetch(`${JSONBIN_API}/${config.jsonBinId}?meta=false`, { headers });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const raw = await resp.json();
         songs = raw.songs || [];
         parts = raw.parts || [];
         clips = raw.clips || [];
+        loaded = true;
+      } catch (err) {
+        console.warn('JSONBin fetch failed, trying clips.json:', err);
       }
-      nextClipId = clips.reduce((max, c) => Math.max(max, c.id || 0), 0) + 1;
-      stopScrubber();
-      renderAll();
-      const banner = document.getElementById('data-banner');
-      if (banner) banner.hidden = true;
-      showToast('Reset to published data');
-    } catch (err) {
-      console.error('Failed to reload clips.json:', err);
-      showToast('Failed to reload — check console');
     }
+
+    // Fallback to clips.json
+    if (!loaded) {
+      try {
+        const resp = await fetch('./data/clips.json');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const raw = await resp.json();
+        if (Array.isArray(raw)) {
+          loadLegacy(raw);
+        } else {
+          songs = raw.songs || [];
+          parts = raw.parts || [];
+          clips = raw.clips || [];
+        }
+        loaded = true;
+      } catch (err) {
+        console.error('Failed to reload clips.json:', err);
+        showToast('Failed to reload — check console');
+        return;
+      }
+    }
+
+    nextClipId = clips.reduce((max, c) => Math.max(max, c.id || 0), 0) + 1;
+    stopScrubber();
+    renderAll();
+    const banner = document.getElementById('data-banner');
+    if (banner) banner.hidden = true;
+    showToast('Reset to published data');
   });
 
   document.getElementById('btn-import-json')?.addEventListener('change', (e) => {
@@ -269,11 +335,53 @@ function exportJson() {
   a.download = 'clips.json';
   a.click();
   URL.revokeObjectURL(url);
-  // Clear draft so student page reads from the new clips.json after replacement
-  localStorage.removeItem(STORAGE_KEY);
-  const banner = document.getElementById('data-banner');
-  if (banner) banner.hidden = true;
-  showToast('clips.json downloaded — draft cleared');
+  showToast('clips.json downloaded');
+}
+
+async function publishToJsonBin() {
+  if (!config.jsonBinId) {
+    showToast('No jsonBinId configured in config.js');
+    return;
+  }
+  const masterKey = localStorage.getItem(JSONBIN_KEY_STORAGE);
+  if (!masterKey) {
+    const key = prompt('Enter your JSONBin.io X-Master-Key:');
+    if (!key || !key.trim()) {
+      showToast('Publish cancelled — no master key');
+      return;
+    }
+    localStorage.setItem(JSONBIN_KEY_STORAGE, key.trim());
+    return publishToJsonBin(); // retry with key now stored
+  }
+
+  const btn = document.getElementById('btn-publish');
+  if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
+
+  try {
+    const data = { songs, parts, clips };
+    const resp = await fetch(`${JSONBIN_API}/${config.jsonBinId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': masterKey,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!resp.ok) {
+      const body = await resp.text();
+      throw new Error(`HTTP ${resp.status}: ${body}`);
+    }
+    // Success — clear draft, hide banner
+    localStorage.removeItem(STORAGE_KEY);
+    const banner = document.getElementById('data-banner');
+    if (banner) banner.hidden = true;
+    showToast('Published! Students will see the update.');
+  } catch (err) {
+    console.error('Publish failed:', err);
+    showToast('Publish failed — check console');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Publish'; }
+  }
 }
 
 /* ── Render All ── */
@@ -782,7 +890,7 @@ function showBanner(msg) {
 function showDraftBanner() {
   const banner = document.getElementById('data-banner');
   if (!banner) return;
-  banner.textContent = 'Loaded from local draft — export to publish changes';
+  banner.textContent = 'Loaded from local draft — click Publish to push changes live';
   banner.classList.remove('banner-error', 'banner-warn');
   banner.classList.add('banner-info');
   banner.hidden = false;

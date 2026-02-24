@@ -12,7 +12,11 @@ export const config = {
   // Paste the URL here. Leave empty to use the local clips.json fallback.
   sheetCsvUrl: '',
 
-  contactEmail: 'music@school.edu',
+  // JSONBin.io bin ID for cloud publishing (admin pushes, students read).
+  // Create a bin at jsonbin.io, paste its ID here. Leave empty to skip cloud.
+  jsonBinId: '699d5d5943b1c97be998dfe8',
+
+  contactEmail: 'adcatheatreinfo@gmail.com',
   heroImage: './img/rose.svg',
 
   // Simple password gate for admin page (not truly secure — just prevents students from wandering in)

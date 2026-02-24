@@ -16,17 +16,22 @@ import { config } from './config.js';
  *   - source: 'live' | 'cached' | 'error'
  */
 export async function fetchClips() {
-  // Check for admin draft in localStorage (same browser)
-  try {
-    const draft = localStorage.getItem('batb-clips-draft');
-    if (draft) {
-      const raw = JSON.parse(draft);
+  // Try JSONBin cloud first (live published data)
+  if (config.jsonBinId) {
+    try {
+      const resp = await fetch(
+        `https://api.jsonbin.io/v3/b/${config.jsonBinId}?meta=false`
+      );
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const raw = await resp.json();
       const { songs, parts, clips } = resolveClips(raw);
-      return { songs, parts, clips, source: 'draft' };
+      return { songs, parts, clips, source: 'live' };
+    } catch (err) {
+      console.warn('JSONBin fetch failed, trying fallback:', err);
     }
-  } catch (e) { /* ignore parse errors, fall through */ }
+  }
 
-  // Try Google Sheet CSV first
+  // Try Google Sheet CSV
   if (config.sheetCsvUrl) {
     try {
       const resp = await fetch(config.sheetCsvUrl);
@@ -93,7 +98,7 @@ function resolveClips(data) {
       song: song ? song.title : clip.songId,
       fullTrackId: song ? `./audio/full/${song.file}` : '',
       backingTrackId: song ? `./audio/instrumental/${song.file}` : '',
-      sheetUrl: (song && song.sheet) ? `./sheets/${song.sheet}` : '',
+      sheetUrl: (song && song.sheet) ? `./sheet_music/${song.sheet}` : '',
       startTime,
       endTime,
       startRaw: clip.start || formatTimestamp(startTime),
