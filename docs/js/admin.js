@@ -261,6 +261,30 @@ function setupToolbar() {
     showToast('Reset to published data');
   });
 
+  document.getElementById('btn-load-file')?.addEventListener('click', async () => {
+    try {
+      const resp = await fetch('./data/clips.json');
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const raw = await resp.json();
+      if (Array.isArray(raw)) {
+        loadLegacy(raw);
+      } else {
+        songs = raw.songs || [];
+        parts = raw.parts || [];
+        clips = raw.clips || [];
+      }
+      nextClipId = clips.reduce((max, c) => Math.max(max, c.id || 0), 0) + 1;
+      stopScrubber();
+      renderAll();
+      saveToLocalStorage();
+      showDraftBanner();
+      showToast('Loaded from clips.json — review & Publish when ready');
+    } catch (err) {
+      console.error('Failed to load clips.json:', err);
+      showToast('Failed to load clips.json — check console');
+    }
+  });
+
   document.getElementById('btn-import-json')?.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
