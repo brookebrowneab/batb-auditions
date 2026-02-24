@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Clip Builder — Audition Practice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body class="admin-body">
+  <header class="site-header">
+    <h1 class="show-title" style="font-size:1.3rem">Clip Builder</h1>
+    <p class="show-subtitle">Build and manage audition clips, parts, and songs</p>
+  </header>
+
+  <main class="main-content">
+    <div class="admin-toolbar" id="admin-toolbar">
+      <label class="btn btn-outline" style="cursor:pointer">
+        Import JSON
+        <input type="file" id="btn-import-json" accept=".json" hidden>
+      </label>
+      <button class="btn btn-gold" id="btn-export-json">Export JSON</button>
+      <button class="btn btn-outline" id="btn-reset-published">Reset to Published</button>
+      <a href="./index.html" class="btn btn-outline">View Student Page</a>
+    </div>
+
+    <div id="data-banner" class="data-banner" hidden></div>
+
+    <nav class="admin-tabs" id="admin-tabs">
+      <button class="admin-tab active" data-tab="clips">Clips</button>
+      <button class="admin-tab" data-tab="parts">Parts</button>
+      <button class="admin-tab" data-tab="songs">Songs</button>
+    </nav>
+
+    <!-- Clips Tab -->
+    <section class="tab-panel active" id="panel-clips" aria-label="Clips editor">
+      <div class="clips-list" id="clips-list">
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>Loading clips&hellip;</p>
+        </div>
+      </div>
+      <div class="section-actions">
+        <button class="btn btn-gold" id="btn-new-clip">+ New Clip</button>
+      </div>
+    </section>
+
+    <!-- Parts Tab -->
+    <section class="tab-panel" id="panel-parts" aria-label="Parts editor">
+      <div class="parts-list" id="parts-list"></div>
+      <div class="section-actions">
+        <button class="btn btn-gold" id="btn-new-part">+ New Part</button>
+      </div>
+    </section>
+
+    <!-- Songs Tab -->
+    <section class="tab-panel" id="panel-songs" aria-label="Songs editor">
+      <div class="songs-list" id="songs-list"></div>
+      <div class="section-actions">
+        <button class="btn btn-gold" id="btn-new-song">+ New Song</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script type="module" src="./js/admin.js"></script>
+</body>
+</html>
