@@ -1,6 +1,6 @@
 {
   "songs": [
-    { "id": "02_Belle", "title": "Belle (Opening)", "file": "02_Belle.mp3", "sheet": "02_Belle.pdf" },
+    { "id": "02_Belle", "title": "Belle (Opening)", "file": "02_Belle.mp3", "sheet": "" },
     { "id": "12_Home", "title": "Home", "file": "12_Home.mp3", "sheet": "12_Home.pdf" },
     { "id": "14_Gaston", "title": "Me (Gaston's Song)", "file": "14_Gaston.mp3", "sheet": "14_Gaston.pdf" },
     { "id": "15_Gaston_Reprise", "title": "Gaston (Reprise)", "file": "15_Gaston_Reprise.mp3", "sheet": "15_Gaston_Reprise.pdf" },
@@ -8,7 +8,7 @@
     { "id": "19_Something_There", "title": "Something There", "file": "19_Something There.mp3", "sheet": "19_Something_There.pdf" },
     { "id": "20_Human_Again", "title": "Human Again", "file": "20_Human Again.mp3", "sheet": "20_Human_Again.pdf" },
     { "id": "22_Beauty_and_the_Beast", "title": "Beauty and the Beast", "file": "22_Beauty and the Beast.mp3", "sheet": "22_Beauty_and_the_Beast.pdf" },
-    { "id": "24_The_Mob_Song", "title": "The Mob Song", "file": "24_The Mob Song.mp3", "sheet": "24_The_Mob_Song.pdf" }
+    { "id": "24_The_Mob_Song", "title": "The Mob Song", "file": "24_The Mob Song.mp3", "sheet": "" }
   ],
   "parts": [
     { "name": "Belle", "color": "#2563EB" },
