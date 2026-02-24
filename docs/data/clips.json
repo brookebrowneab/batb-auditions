@@ -1,108 +1,228 @@
 {
   "songs": [
-    { "id": "02_Belle", "title": "Belle (Opening)", "file": "02_Belle.mp3", "sheet": "Belle.pdf" },
-    { "id": "12_Home", "title": "Home", "file": "12_Home.mp3", "sheet": "Home.pdf" },
-    { "id": "14_Gaston", "title": "Me (Gaston's Song)", "file": "14_Gaston.mp3", "sheet": "Gaston.pdf" },
-    { "id": "15_Gaston_Reprise", "title": "Gaston (Reprise)", "file": "15_Gaston_Reprise.mp3", "sheet": "Gaston_Reprise.pdf" },
-    { "id": "16_Be_Our_Guest", "title": "Be Our Guest", "file": "16_Be Our Guest.mp3", "sheet": "Be_Our_Guest.pdf" },
-    { "id": "19_Something_There", "title": "Something There", "file": "19_Something There.mp3", "sheet": "Something_There.pdf" },
-    { "id": "20_Human_Again", "title": "Human Again", "file": "20_Human Again.mp3", "sheet": "Human_Again.pdf" },
-    { "id": "22_Beauty_and_the_Beast", "title": "Beauty and the Beast", "file": "22_Beauty and the Beast.mp3", "sheet": "Beauty_and_the_Beast.pdf" },
-    { "id": "24_The_Mob_Song", "title": "The Mob Song", "file": "24_The Mob Song.mp3", "sheet": "Mob_Song.pdf" }
+    {
+      "id": "02_Belle",
+      "title": "Belle (Opening)",
+      "file": "02_Belle.mp3",
+      "sheet": "Belle.pdf"
+    },
+    {
+      "id": "12_Home",
+      "title": "Home",
+      "file": "12_Home.mp3",
+      "sheet": "Home.pdf"
+    },
+    {
+      "id": "14_Gaston",
+      "title": "Me (Gaston's Song)",
+      "file": "14_Gaston.mp3",
+      "sheet": "Gaston.pdf"
+    },
+    {
+      "id": "15_Gaston_Reprise",
+      "title": "Gaston (Reprise)",
+      "file": "15_Gaston_Reprise.mp3",
+      "sheet": "Gaston_Reprise.pdf"
+    },
+    {
+      "id": "16_Be_Our_Guest",
+      "title": "Be Our Guest",
+      "file": "16_Be Our Guest.mp3",
+      "sheet": "Be_Our_Guest.pdf"
+    },
+    {
+      "id": "19_Something_There",
+      "title": "Something There",
+      "file": "19_Something There.mp3",
+      "sheet": "Something_There.pdf"
+    },
+    {
+      "id": "20_Human_Again",
+      "title": "Human Again",
+      "file": "20_Human Again.mp3",
+      "sheet": "Human_Again.pdf"
+    },
+    {
+      "id": "22_Beauty_and_the_Beast",
+      "title": "Beauty and the Beast",
+      "file": "22_Beauty and the Beast.mp3",
+      "sheet": "Beauty_and_the_Beast.pdf"
+    },
+    {
+      "id": "24_The_Mob_Song",
+      "title": "The Mob Song",
+      "file": "24_The Mob Song.mp3",
+      "sheet": "Mob_Song.pdf"
+    }
   ],
   "parts": [
-    { "name": "Belle", "color": "#2563EB" },
-    { "name": "Beast", "color": "#7C3AED" },
-    { "name": "Gaston", "color": "#DC2626" },
-    { "name": "Lumiere", "color": "#D97706" },
-    { "name": "Mrs. Potts", "color": "#DB2777" },
-    { "name": "Maurice", "color": "#059669" },
-    { "name": "Cogsworth", "color": "#854D0E" },
-    { "name": "Babette", "color": "#EC4899" },
-    { "name": "Chip", "color": "#0EA5E9" },
-    { "name": "Featured Singer", "color": "#6366F1" },
-    { "name": "Ensemble", "color": "#64748B" }
+    {
+      "name": "Belle",
+      "color": "#2563EB"
+    },
+    {
+      "name": "Beast",
+      "color": "#7C3AED"
+    },
+    {
+      "name": "Gaston",
+      "color": "#DC2626"
+    },
+    {
+      "name": "Lumiere",
+      "color": "#D97706"
+    },
+    {
+      "name": "Mrs. Potts",
+      "color": "#DB2777"
+    },
+    {
+      "name": "Maurice",
+      "color": "#059669"
+    },
+    {
+      "name": "Cogsworth",
+      "color": "#854D0E"
+    },
+    {
+      "name": "Le Feu",
+      "color": "#EC4899"
+    },
+    {
+      "name": "Chip",
+      "color": "#0EA5E9"
+    },
+    {
+      "name": "Featured Singer",
+      "color": "#6366F1"
+    },
+    {
+      "name": "Ensemble",
+      "color": "#64748B"
+    }
   ],
   "clips": [
     {
       "id": 1,
       "songId": "02_Belle",
-      "start": "0:15",
-      "end": "1:02",
+      "start": "1:35",
+      "end": "2:15",
       "notes": "\"Little town, it's a quiet village\" — Belle's opening verse through \"I want adventure in the great wide somewhere\"",
-      "parts": ["Belle"]
+      "parts": [
+        "Belle"
+      ]
     },
     {
       "id": 2,
       "songId": "02_Belle",
-      "start": "2:10",
-      "end": "2:55",
+      "start": "3:49",
+      "end": "4:06",
       "notes": "Gaston's section — \"Right from the moment when I met her, saw her\"",
-      "parts": ["Belle", "Gaston"]
+      "parts": [
+        "Belle",
+        "Gaston"
+      ]
     },
     {
       "id": 3,
       "songId": "14_Gaston",
-      "start": "0:20",
-      "end": "1:25",
+      "start": "0:37",
+      "end": "0:55",
       "notes": "\"You've been dreaming, just one dream\" through \"Say my name!\"",
-      "parts": ["Gaston"]
+      "parts": [
+        "Le Feu"
+      ]
     },
     {
       "id": 4,
-      "songId": "15_Gaston_Reprise",
-      "start": "0:00",
-      "end": "0:36",
+      "songId": "14_Gaston",
+      "start": "00:56",
+      "end": "1:08",
       "notes": "Gaston rallies LeFou — short reprise",
-      "parts": ["Gaston"]
+      "parts": [
+        "Featured Singer"
+      ]
     },
     {
       "id": 5,
       "songId": "16_Be_Our_Guest",
-      "start": "0:10",
-      "end": "1:05",
+      "start": "0:21",
+      "end": "1:00",
       "notes": "Lumiere's main verse — \"Be our guest, be our guest, put our service to the test\"",
-      "parts": ["Lumiere"]
+      "parts": [
+        "Lumiere"
+      ]
     },
     {
       "id": 6,
-      "songId": "12_Home",
-      "start": "0:15",
-      "end": "1:30",
-      "notes": "\"Yes I made the choice\" through \"Is this home?\"",
-      "parts": ["Belle"]
+      "songId": "19_Something_There",
+      "start": "2:30",
+      "end": "3:01",
+      "notes": "\"There's something sweet and almost kind\" — Belle's verse",
+      "parts": [
+        "Belle"
+      ]
     },
     {
       "id": 7,
-      "songId": "19_Something_There",
-      "start": "0:10",
-      "end": "0:55",
-      "notes": "\"There's something sweet and almost kind\" — Belle's verse",
-      "parts": ["Belle"]
+      "songId": "20_Human_Again",
+      "start": "0:15",
+      "end": "0:37",
+      "notes": "",
+      "parts": [
+        "Lumiere"
+      ]
     },
     {
       "id": 8,
-      "songId": "22_Beauty_and_the_Beast",
-      "start": "0:10",
-      "end": "1:20",
+      "songId": "20_Human_Again",
+      "start": "1:20",
+      "end": "1:50",
       "notes": "\"Tale as old as time\" — Mrs. Potts' signature ballad",
-      "parts": ["Mrs. Potts"]
+      "parts": [
+        "Cogsworth"
+      ]
     },
     {
       "id": 9,
-      "songId": "24_The_Mob_Song",
-      "start": "0:25",
-      "end": "1:15",
+      "songId": "22_Beauty_and_the_Beast",
+      "start": "0:04",
+      "end": "1:07",
       "notes": "\"The Beast will make off with your children!\" — Gaston rallies the mob",
-      "parts": ["Gaston"]
+      "parts": [
+        "Gaston"
+      ]
     },
     {
       "id": 10,
-      "songId": "20_Human_Again",
-      "start": "0:15",
-      "end": "0:50",
+      "songId": "22_Beauty_and_the_Beast",
+      "start": "1:13",
+      "end": "1:34",
       "notes": "Cogsworth's featured verse",
-      "parts": ["Cogsworth"]
+      "parts": [
+        "Mrs. Potts"
+      ]
+    },
+    {
+      "id": 11,
+      "songId": "24_The_Mob_Song",
+      "start": "1:41",
+      "end": "2:02",
+      "notes": "",
+      "parts": [
+        "Featured Singer",
+        "Ensemble"
+      ]
+    },
+    {
+      "id": 12,
+      "songId": "15_Gaston_Reprise",
+      "start": "0:00",
+      "end": "0:36",
+      "notes": "",
+      "parts": [
+        "Gaston"
+      ]
     }
   ]
 }
