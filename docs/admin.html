@@ -35,6 +35,7 @@
       <button class="admin-tab active" data-tab="clips">Clips</button>
       <button class="admin-tab" data-tab="parts">Parts</button>
       <button class="admin-tab" data-tab="songs">Songs</button>
+      <button class="admin-tab" data-tab="sides">Sides</button>
     </nav>
 
     <!-- Clips Tab -->
@@ -63,6 +64,21 @@
       <div class="songs-list" id="songs-list"></div>
       <div class="section-actions">
         <button class="btn btn-gold" id="btn-new-song">+ New Song</button>
+      </div>
+    </section>
+
+    <!-- Sides Tab -->
+    <section class="tab-panel" id="panel-sides" aria-label="Sides editor">
+      <div class="sides-admin-list" id="admin-sides-list"></div>
+      <div class="section-actions">
+        <button class="btn btn-gold" id="btn-new-side">+ New Side</button>
+      </div>
+      <div class="sides-toolbar">
+        <button class="btn btn-outline" id="btn-export-sides">Export Sides JSON</button>
+        <label class="btn btn-outline" style="cursor:pointer">
+          Import Sides JSON
+          <input type="file" id="btn-import-sides" accept=".json" hidden>
+        </label>
       </div>
     </section>
   </main>

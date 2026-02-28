@@ -16,6 +16,7 @@ const ICON_DELETE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" 
 let songs = [];
 let parts = [];
 let clips = [];
+let sides = [];
 let nextClipId = 1;
 
 /* ── localStorage Auto-Save ── */
@@ -32,6 +33,20 @@ function saveToLocalStorage() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ songs, parts, clips }));
     } catch (e) {
       console.warn('localStorage save failed:', e);
+    }
+  }, 300);
+}
+
+const SIDES_STORAGE_KEY = 'batb-sides-draft';
+let sidesSaveTimeout = null;
+
+function saveToSidesLocalStorage() {
+  clearTimeout(sidesSaveTimeout);
+  sidesSaveTimeout = setTimeout(() => {
+    try {
+      localStorage.setItem(SIDES_STORAGE_KEY, JSON.stringify({ sides }));
+    } catch (e) {
+      console.warn('localStorage sides save failed:', e);
     }
   }, 300);
 }
@@ -150,6 +165,29 @@ async function init() {
 
   nextClipId = clips.reduce((max, c) => Math.max(max, c.id || 0), 0) + 1;
 
+  // Load sides data — priority: localStorage draft > sides.json file
+  let sidesLoadedFromDraft = false;
+  try {
+    const sidesDraft = localStorage.getItem(SIDES_STORAGE_KEY);
+    if (sidesDraft) {
+      const data = JSON.parse(sidesDraft);
+      sides = data.sides || [];
+      sidesLoadedFromDraft = true;
+    }
+  } catch (e) { /* ignore parse errors */ }
+
+  if (!sidesLoadedFromDraft) {
+    try {
+      const resp = await fetch('./data/sides.json');
+      if (resp.ok) {
+        const raw = await resp.json();
+        sides = raw.sides || [];
+      }
+    } catch (err) {
+      console.warn('Failed to load sides.json:', err);
+    }
+  }
+
   renderAll();
   setupTabs();
   setupToolbar();
@@ -211,6 +249,7 @@ function setupToolbar() {
   document.getElementById('btn-reset-published')?.addEventListener('click', async () => {
     if (!confirm('Discard local draft and reload from published data?')) return;
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(SIDES_STORAGE_KEY);
 
     let loaded = false;
 
@@ -254,6 +293,17 @@ function setupToolbar() {
     }
 
     nextClipId = clips.reduce((max, c) => Math.max(max, c.id || 0), 0) + 1;
+    // Also reload sides from sides.json
+    try {
+      const sidesResp = await fetch('./data/sides.json');
+      if (sidesResp.ok) {
+        const sidesRaw = await sidesResp.json();
+        sides = sidesRaw.sides || [];
+      }
+    } catch (err) {
+      console.warn('Failed to reload sides.json:', err);
+    }
+
     stopScrubber();
     renderAll();
     const banner = document.getElementById('data-banner');
@@ -347,6 +397,36 @@ function setupToolbar() {
     saveToLocalStorage();
     showToast('New song added');
   });
+
+  document.getElementById('btn-new-side')?.addEventListener('click', () => {
+    const id = `side_${Date.now()}`;
+    sides.push({ id, title: 'New Side', file: '', characters: [] });
+    renderSides();
+    saveToSidesLocalStorage();
+    showToast('New side added');
+  });
+
+  document.getElementById('btn-export-sides')?.addEventListener('click', exportSidesJson);
+
+  document.getElementById('btn-import-sides')?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        sides = data.sides || [];
+        renderSides();
+        saveToSidesLocalStorage();
+        showToast('Sides imported successfully');
+      } catch (err) {
+        showToast('Invalid JSON file');
+        console.error('Sides import failed:', err);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
 }
 
 function exportJson() {
@@ -360,6 +440,19 @@ function exportJson() {
   a.click();
   URL.revokeObjectURL(url);
   showToast('clips.json downloaded');
+}
+
+function exportSidesJson() {
+  const data = { sides };
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sides.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('sides.json downloaded');
 }
 
 async function publishToJsonBin() {
@@ -414,6 +507,7 @@ function renderAll() {
   renderClips();
   renderParts();
   renderSongs();
+  renderSides();
 }
 
 /* ══════════════════════════════
@@ -896,6 +990,64 @@ function createSongRow(song) {
     renderClips();
     saveToLocalStorage();
     showToast('Song deleted');
+  });
+
+  return row;
+}
+
+/* ══════════════════════════════
+   SIDES TAB
+   ══════════════════════════════ */
+
+function renderSides() {
+  const list = document.getElementById('admin-sides-list');
+  if (!list) return;
+  list.innerHTML = '';
+
+  for (const side of sides) {
+    list.appendChild(createSideRow(side));
+  }
+}
+
+function createSideRow(side) {
+  const row = document.createElement('div');
+  row.className = 'side-admin-row';
+
+  row.innerHTML = `
+    <input type="text" class="side-title-input" value="${esc(side.title)}" placeholder="Side title">
+    <input type="text" class="side-file-input" value="${esc(side.file || '')}" placeholder="filename.pdf">
+    <input type="text" class="side-characters-input" value="${esc((side.characters || []).join(', '))}" placeholder="Character1, Character2, ...">
+    <button class="btn-icon btn-delete-side" title="Delete side">${ICON_DELETE}</button>
+  `;
+
+  row.querySelector('.side-title-input').addEventListener('change', (e) => {
+    side.title = e.target.value.trim() || side.title;
+    saveToSidesLocalStorage();
+  });
+
+  row.querySelector('.side-file-input').addEventListener('change', (e) => {
+    const val = e.target.value.trim();
+    side.file = val;
+    if (val) {
+      side.id = val.replace(/\.pdf$/i, '').replace(/\s+/g, '-').toLowerCase();
+    }
+    saveToSidesLocalStorage();
+  });
+
+  row.querySelector('.side-characters-input').addEventListener('change', (e) => {
+    side.characters = e.target.value
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+    saveToSidesLocalStorage();
+  });
+
+  row.querySelector('.btn-delete-side').addEventListener('click', () => {
+    if (!confirm(`Delete side "${side.title}"?`)) return;
+    sides = sides.filter(s => s !== side);
+    renderSides();
+    saveToSidesLocalStorage();
+    showToast('Side deleted');
   });
 
   return row;

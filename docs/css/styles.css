@@ -1345,6 +1345,96 @@ a {
   font-style: italic;
 }
 
+/* ── Sides Tab (admin) ── */
+
+.sides-admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.side-admin-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--color-white);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.side-title-input {
+  flex: 1;
+  min-width: 140px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-navy);
+  padding: 0 0.5rem;
+}
+
+.side-title-input:focus {
+  outline: none;
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 2px rgba(212, 168, 67, 0.2);
+}
+
+.side-file-input {
+  width: 160px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: var(--color-navy);
+  padding: 0 0.5rem;
+}
+
+.side-file-input:focus {
+  outline: none;
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 2px rgba(212, 168, 67, 0.2);
+}
+
+.side-file-input::placeholder {
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.side-characters-input {
+  flex: 2;
+  min-width: 180px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: var(--color-navy);
+  padding: 0 0.5rem;
+}
+
+.side-characters-input:focus {
+  outline: none;
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 2px rgba(212, 168, 67, 0.2);
+}
+
+.side-characters-input::placeholder {
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.sides-toolbar {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 /* ── Admin Actions ── */
 
 .section-actions {
