@@ -1,0 +1,11 @@
+{
+  "sides": [
+    { "id": "beast-belle-maurice", "title": "Beast, Belle, Maurice", "file": "beast-belle-maurice.pdf", "characters": ["Beast", "Belle", "Maurice"] },
+    { "id": "belle-gaston-lefou", "title": "Belle, Gaston, Lefou", "file": "belle-gaston-lefou.pdf", "characters": ["Belle", "Gaston", "Le Feu"] },
+    { "id": "gaston-lefou", "title": "Gaston, Lefou", "file": "gaston-lefou.pdf", "characters": ["Gaston", "Le Feu"] },
+    { "id": "gaston-les-filles", "title": "Gaston, Les Filles De La Ville", "file": "gaston-les-filles.pdf", "characters": ["Gaston"] },
+    { "id": "castle-servants", "title": "Maurice, Lumiere, Babette, Mrs. Potts, Chip, Cogsworth", "file": "castle-servants.pdf", "characters": ["Maurice", "Lumiere", "Mrs. Potts", "Chip", "Cogsworth"] },
+    { "id": "enchanted-objects", "title": "Mrs. Potts, Lumiere, Beast, Cogsworth, Babette, Mme de la Grande Bouche", "file": "enchanted-objects.pdf", "characters": ["Mrs. Potts", "Lumiere", "Beast", "Cogsworth"] },
+    { "id": "narrators", "title": "Narrators", "file": "narrators.pdf", "characters": [] }
+  ]
+}

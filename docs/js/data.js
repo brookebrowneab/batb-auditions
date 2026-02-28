@@ -1,22 +1,15 @@
 /**
- * Data layer: fetches clip definitions from a published Google Sheet (CSV)
- * or falls back to the local clips.json file.
- *
- * New format (clips.json as { songs, parts, clips }) is auto-detected.
- * Legacy format (flat array) still works for backward compatibility.
+ * Data layer: fetches clip and sides data.
+ * Extended from v1 with character index building and sides support.
  */
 import { config } from './config.js';
 
 /**
  * Fetch and parse audition clips.
  * Returns { songs, parts, clips, source }
- *   - songs: array of { id, title, file }
- *   - parts: array of { name, color }
- *   - clips: resolved clip objects ready for UI/player
- *   - source: 'live' | 'cached' | 'error'
  */
 export async function fetchClips() {
-  // Try JSONBin cloud first (live published data)
+  // Try JSONBin cloud first
   if (config.jsonBinId) {
     try {
       const resp = await fetch(
@@ -31,35 +24,18 @@ export async function fetchClips() {
     }
   }
 
-  // Try Google Sheet CSV
-  if (config.sheetCsvUrl) {
-    try {
-      const resp = await fetch(config.sheetCsvUrl);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const text = await resp.text();
-      const clips = parseCsv(text);
-      if (clips.length > 0) {
-        return { songs: [], parts: buildPartsFromClips(clips), clips, source: 'live' };
-      }
-    } catch (err) {
-      console.warn('Google Sheet fetch failed, trying fallback:', err);
-    }
-  }
-
   // Fallback to local JSON
   try {
-    const resp = await fetch('./data/clips.json');
+    const url = config.clipsDataUrl || './data/clips.json';
+    const resp = await fetch(url);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const raw = await resp.json();
 
-    // Detect format: new structured vs legacy flat array
     if (Array.isArray(raw)) {
-      // Legacy flat array
       const clips = raw.map((c, i) => normalizeClip(c, i));
       return { songs: [], parts: buildPartsFromClips(clips), clips, source: 'cached' };
     }
 
-    // New structured format
     const { songs, parts, clips } = resolveClips(raw);
     return { songs, parts, clips, source: 'cached' };
   } catch (err) {
@@ -68,14 +44,79 @@ export async function fetchClips() {
   }
 }
 
-/* ── New Format Resolution ── */
+/**
+ * Fetch callback sides data.
+ * Returns array of { id, title, file, characters, url }
+ */
+export async function fetchSides() {
+  try {
+    const url = config.sidesDataUrl || './data/sides.json';
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    const sidesPath = config.sidesPath || './sides/';
+    return (data.sides || []).map(s => ({
+      ...s,
+      url: `${sidesPath}${s.file}`,
+    }));
+  } catch (err) {
+    console.error('Failed to fetch sides:', err);
+    return [];
+  }
+}
 
 /**
- * Resolve structured { songs, parts, clips } into fully hydrated clip objects.
- * Each resolved clip gets: fullTrackId, backingTrackId, song (title),
- * parts (array of names), colors (array), color (first color),
- * startTime, endTime, startRaw, endRaw, notes, id.
+ * Build a character index from clips and parts.
+ * Returns Map<characterName, { name, color, songs: [{ song, clips: [] }], clipCount }>
  */
+export function buildCharacterIndex(clips, parts, songs) {
+  const partMap = new Map(parts.map(p => [p.name, p]));
+  const songMap = new Map(songs.map(s => [s.id, s]));
+  const index = new Map();
+
+  for (const clip of clips) {
+    for (const partName of clip.parts) {
+      if (!index.has(partName)) {
+        const part = partMap.get(partName) || { name: partName, color: '#64748B' };
+        index.set(partName, {
+          name: partName,
+          color: part.color,
+          songMap: new Map(),
+          clipCount: 0,
+        });
+      }
+      const entry = index.get(partName);
+      entry.clipCount++;
+
+      const songId = clip.songId;
+      if (!entry.songMap.has(songId)) {
+        const songData = songMap.get(songId);
+        entry.songMap.set(songId, {
+          songId,
+          title: songData ? songData.title : songId,
+          sheet: songData ? songData.sheet : null,
+          clips: [],
+        });
+      }
+      entry.songMap.get(songId).clips.push(clip);
+    }
+  }
+
+  // Convert songMaps to arrays
+  const result = new Map();
+  for (const [name, entry] of index) {
+    result.set(name, {
+      name: entry.name,
+      color: entry.color,
+      clipCount: entry.clipCount,
+      songs: [...entry.songMap.values()],
+    });
+  }
+  return result;
+}
+
+/* ── Resolution ── */
+
 function resolveClips(data) {
   const songs = data.songs || [];
   const parts = data.parts || [];
@@ -83,6 +124,10 @@ function resolveClips(data) {
 
   const songMap = new Map(songs.map(s => [s.id, s]));
   const partMap = new Map(parts.map(p => [p.name, p]));
+
+  const audioFullPath = config.audioFullPath || './audio/full/';
+  const audioInstrumentalPath = config.audioInstrumentalPath || './audio/instrumental/';
+  const sheetMusicPath = config.sheetMusicPath || './sheet_music/';
 
   const clips = rawClips.map((clip, index) => {
     const song = songMap.get(clip.songId);
@@ -96,9 +141,9 @@ function resolveClips(data) {
       id: clip.id || index + 1,
       songId: clip.songId,
       song: song ? song.title : clip.songId,
-      fullTrackId: song ? `./audio/full/${song.file}` : '',
-      backingTrackId: song ? `./audio/instrumental/${song.file}` : '',
-      sheetUrl: (song && song.sheet) ? `./sheet_music/${song.sheet}` : '',
+      fullTrackId: song ? `${audioFullPath}${song.file}` : '',
+      backingTrackId: song ? `${audioInstrumentalPath}${song.file}` : '',
+      sheetUrl: (song && song.sheet) ? `${sheetMusicPath}${song.sheet}` : '',
       startTime,
       endTime,
       startRaw: clip.start || formatTimestamp(startTime),
@@ -107,7 +152,6 @@ function resolveClips(data) {
       parts: clipParts,
       colors,
       color: colors[0] || 'var(--color-rose)',
-      // Legacy compat: character = first part name
       character: clipParts[0] || '',
     };
   });
@@ -115,7 +159,6 @@ function resolveClips(data) {
   return { songs, parts, clips };
 }
 
-/** Build parts list from legacy flat clips (for CSV / old JSON). */
 function buildPartsFromClips(clips) {
   const seen = new Map();
   for (const clip of clips) {
@@ -124,99 +167,20 @@ function buildPartsFromClips(clips) {
       seen.set(name, { name, color: clip.color || 'var(--color-rose)' });
     }
   }
-
-  // Respect config.characterOrder if present
-  const ordered = [];
-  for (const name of (config.characterOrder || [])) {
-    if (seen.has(name)) {
-      ordered.push(seen.get(name));
-      seen.delete(name);
-    }
-  }
-  // Remaining alphabetically
-  const rest = [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
-  return [...ordered, ...rest];
-}
-
-/* ── CSV Parsing ── */
-
-function parseCsv(text) {
-  const lines = text.trim().split('\n');
-  if (lines.length < 2) return [];
-
-  const clips = [];
-  for (let i = 1; i < lines.length; i++) {
-    const fields = parseCsvLine(lines[i]);
-    if (fields.length < 6) continue;
-
-    const startTime = parseTimestamp(fields[4]?.trim());
-    const endTime = parseTimestamp(fields[5]?.trim());
-
-    const clip = {
-      id: i,
-      character: fields[0]?.trim(),
-      song: fields[1]?.trim(),
-      fullTrackId: fields[2]?.trim(),
-      backingTrackId: fields[3]?.trim(),
-      startTime,
-      endTime,
-      startRaw: fields[4]?.trim(),
-      endRaw: fields[5]?.trim(),
-      notes: fields[6]?.trim() || '',
-      color: fields[7]?.trim() || '',
-      parts: [fields[0]?.trim()],
-      colors: [fields[7]?.trim() || 'var(--color-rose)'],
-    };
-
-    if (clip.character && clip.song && startTime !== null && endTime !== null && endTime > startTime) {
-      clips.push(clip);
-    } else {
-      console.warn(`Skipping invalid row ${i}:`, fields);
-    }
-  }
-  return clips;
-}
-
-/** Parse a single CSV line, respecting quoted fields. */
-function parseCsvLine(line) {
-  const fields = [];
-  let current = '';
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (ch === ',' && !inQuotes) {
-      fields.push(current);
-      current = '';
-    } else {
-      current += ch;
-    }
-  }
-  fields.push(current);
-  return fields;
+  return [...seen.values()];
 }
 
 /* ── Timestamp Helpers ── */
 
-/** Parse "M:SS" or "MM:SS" or "H:MM:SS" → seconds. Returns null on invalid input. */
 export function parseTimestamp(str) {
   if (!str) return null;
   const parts = str.split(':').map(p => parseInt(p, 10));
   if (parts.some(isNaN)) return null;
-
   if (parts.length === 2) return parts[0] * 60 + parts[1];
   if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
   return null;
 }
 
-/** Format seconds → "M:SS" */
 export function formatTimestamp(seconds) {
   if (seconds == null || isNaN(seconds)) return '0:00';
   const s = Math.max(0, Math.round(seconds));
@@ -225,7 +189,6 @@ export function formatTimestamp(seconds) {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-/** Normalize a clip object from legacy JSON fallback. */
 function normalizeClip(clip, index) {
   const startTime = typeof clip.startTime === 'number'
     ? clip.startTime
@@ -244,25 +207,4 @@ function normalizeClip(clip, index) {
     parts: clip.parts || [clip.character],
     colors: clip.colors || [clip.color || 'var(--color-rose)'],
   };
-}
-
-/** Get parts array (from structured data). */
-export function getParts(parts) {
-  return parts;
-}
-
-/** Legacy: get sorted unique character list from clips. */
-export function getCharacters(clips) {
-  const seen = new Set();
-  clips.forEach(c => seen.add(c.character));
-
-  const ordered = [];
-  for (const name of (config.characterOrder || [])) {
-    if (seen.has(name)) {
-      ordered.push(name);
-      seen.delete(name);
-    }
-  }
-  const rest = [...seen].sort();
-  return [...ordered, ...rest];
 }

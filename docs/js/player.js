@@ -164,13 +164,6 @@ export function seek(fraction) {
   notifyState();
 }
 
-/** Seek to an absolute time in seconds (used by admin). */
-export function seekTo(seconds) {
-  if (!audio.src) return;
-  audio.currentTime = Math.max(0, seconds);
-  notifyState();
-}
-
 export function stopPlayback() {
   if (audio) {
     audio.pause();

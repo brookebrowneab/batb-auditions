@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow">
   <title>Beauty and the Beast — Audition Practice</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,26 +14,21 @@
   <header class="site-header">
     <img src="./img/rose.svg" alt="" class="header-rose" aria-hidden="true">
     <h1 class="show-title">Beauty and the Beast</h1>
-    <p class="show-subtitle">Audition Practice Tracks</p>
+    <p class="show-subtitle">Audition Practice Materials</p>
   </header>
 
   <main class="main-content">
-    <div id="data-banner" class="data-banner" hidden></div>
-
-    <nav class="filter-bar" id="filter-bar" aria-label="Filter by character">
-      <!-- Populated by JS -->
-    </nav>
-
-    <section class="clips-list" id="clips-list" aria-label="Audition clips">
-      <div class="loading-state">
-        <div class="loading-spinner"></div>
-        <p>Loading audition clips&hellip;</p>
-      </div>
-    </section>
+    <div id="loading-state" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Loading audition materials&hellip;</p>
+    </div>
+    <div id="app-content"></div>
   </main>
 
+  <div id="sticky-player" class="sticky-player"></div>
+
   <footer class="site-footer">
-    <p>Audio not working? <a id="contact-link" href="mailto:music@school.edu">Email us for help</a></p>
+    <p>Audio not working? <a id="contact-link" href="mailto:adcatheatreinfo@gmail.com">Email us for help</a></p>
     <p class="footer-note">Audition materials for practice only. Please do not redistribute.</p>
   </footer>
 
