@@ -282,8 +282,8 @@ a {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  min-width: 0;
-  flex: 1;
+  min-width: 180px;
+  flex: 1 0 auto;
 }
 
 .clip-row-play {
@@ -316,7 +316,8 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
-  flex-shrink: 0;
+  flex: 1 0 auto;
+  justify-content: flex-end;
 }
 
 .clip-row-badge {
