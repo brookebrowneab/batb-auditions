@@ -1042,7 +1042,14 @@ function createSongRow(song) {
     const val = e.target.value.trim();
     song.file = val;
     if (val) {
-      song.id = val.replace(/\.mp3$/i, '');
+      const oldId = song.id;
+      const newId = val.replace(/\.mp3$/i, '');
+      song.id = newId;
+      // Update all clips referencing the old song ID
+      for (const clip of clips) {
+        if (clip.songId === oldId) clip.songId = newId;
+      }
+      renderClips();
     }
     saveToLocalStorage();
   });
