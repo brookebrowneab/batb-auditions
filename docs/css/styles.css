@@ -254,9 +254,8 @@ a {
 
 .clip-row {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.75rem;
+  flex-direction: column;
+  gap: 0.5rem;
   padding: 0.875rem 1rem;
   background: var(--color-white);
   border-radius: var(--radius-sm);
@@ -282,8 +281,6 @@ a {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  min-width: 180px;
-  flex: 1 0 auto;
 }
 
 .clip-row-play {
@@ -316,8 +313,6 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
-  flex: 1 0 auto;
-  justify-content: flex-end;
 }
 
 .clip-row-badge {
