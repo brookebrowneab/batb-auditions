@@ -49,16 +49,30 @@ export async function fetchClips() {
  * Returns array of { id, title, file, characters, url }
  */
 export async function fetchSides() {
+  const sidesPath = config.sidesPath || './sides/';
+  const mapSides = (arr) => (arr || []).map(s => ({ ...s, url: `${sidesPath}${s.file}` }));
+
+  // Try JSONBin cloud first (sides are published alongside clips)
+  if (config.jsonBinId) {
+    try {
+      const resp = await fetch(
+        `https://api.jsonbin.io/v3/b/${config.jsonBinId}?meta=false`
+      );
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      if (data.sides) return mapSides(data.sides);
+    } catch (err) {
+      console.warn('JSONBin sides fetch failed, trying fallback:', err);
+    }
+  }
+
+  // Fallback to local JSON
   try {
     const url = config.sidesDataUrl || './data/sides.json';
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
-    const sidesPath = config.sidesPath || './sides/';
-    return (data.sides || []).map(s => ({
-      ...s,
-      url: `${sidesPath}${s.file}`,
-    }));
+    return mapSides(data.sides);
   } catch (err) {
     console.error('Failed to fetch sides:', err);
     return [];

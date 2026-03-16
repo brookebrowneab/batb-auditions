@@ -10,6 +10,7 @@ import { config } from './config.js';
 const ICON_PLAY = `<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><polygon points="6,3 20,12 6,21"/></svg>`;
 const ICON_PAUSE = `<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>`;
 const ICON_DELETE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14"/></svg>`;
+const ICON_DRAG = `<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>`;
 
 /* ── In-Memory State ── */
 
@@ -475,7 +476,7 @@ async function publishToJsonBin() {
   if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
 
   try {
-    const data = { songs, parts, clips };
+    const data = { songs, parts, clips, sides };
     const resp = await fetch(`${JSONBIN_API}/${config.jsonBinId}`, {
       method: 'PUT',
       headers: {
@@ -488,8 +489,9 @@ async function publishToJsonBin() {
       const body = await resp.text();
       throw new Error(`HTTP ${resp.status}: ${body}`);
     }
-    // Success — clear draft, hide banner
+    // Success — clear drafts, hide banner
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(SIDES_STORAGE_KEY);
     const banner = document.getElementById('data-banner');
     if (banner) banner.hidden = true;
     showToast('Published! Students will see the update.');
@@ -514,6 +516,8 @@ function renderAll() {
    CLIPS TAB
    ══════════════════════════════ */
 
+let draggedClipId = null;
+
 function renderClips() {
   const list = document.getElementById('clips-list');
   if (!list) return;
@@ -522,6 +526,47 @@ function renderClips() {
   for (const clip of clips) {
     list.appendChild(createClipCard(clip));
   }
+
+  // ── Drag-and-drop reordering on the list container ──
+  list.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const target = getDragTarget(list, e.clientY);
+    clearDragIndicators(list);
+    if (target) target.classList.add('drag-over');
+  });
+
+  list.addEventListener('dragleave', (e) => {
+    if (!list.contains(e.relatedTarget)) clearDragIndicators(list);
+  });
+
+  list.addEventListener('drop', (e) => {
+    e.preventDefault();
+    clearDragIndicators(list);
+    if (draggedClipId === null) return;
+
+    const targetCard = getDragTarget(list, e.clientY);
+    const fromIdx = clips.findIndex(c => c.id === draggedClipId);
+    let toIdx = targetCard ? clips.findIndex(c => c.id === Number(targetCard.dataset.clipId)) : clips.length - 1;
+    if (fromIdx === -1 || fromIdx === toIdx) return;
+
+    const [moved] = clips.splice(fromIdx, 1);
+    clips.splice(toIdx, 0, moved);
+    renderClips();
+    saveToLocalStorage();
+  });
+}
+
+function getDragTarget(list, y) {
+  const cards = [...list.querySelectorAll('.clip-card:not(.dragging)')];
+  for (const card of cards) {
+    const rect = card.getBoundingClientRect();
+    if (y < rect.top + rect.height / 2) return card;
+  }
+  return cards[cards.length - 1] || null;
+}
+
+function clearDragIndicators(list) {
+  list.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
 }
 
 function createClipCard(clip) {
@@ -548,8 +593,11 @@ function createClipCard(clip) {
       </label>`;
   }).join('');
 
+  card.draggable = true;
+
   card.innerHTML = `
     <div class="admin-clip-header">
+      <span class="drag-handle" title="Drag to reorder">${ICON_DRAG}</span>
       <select class="clip-song-select">${songOptions}</select>
       <button class="btn-icon btn-delete-clip" title="Delete clip">${ICON_DELETE}</button>
     </div>
@@ -699,6 +747,19 @@ function createClipCard(clip) {
     renderClips();
     saveToLocalStorage();
     showToast('Clip deleted');
+  });
+
+  // ── Drag-and-drop ──
+  card.addEventListener('dragstart', (e) => {
+    draggedClipId = clip.id;
+    card.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+
+  card.addEventListener('dragend', () => {
+    draggedClipId = null;
+    card.classList.remove('dragging');
+    clearDragIndicators(card.parentElement);
   });
 
   return card;
