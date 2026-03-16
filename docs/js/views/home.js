@@ -111,7 +111,7 @@ export function renderHome(container, characterIndex, sides, clips) {
         <div class="clip-row-main">
           <svg class="clip-row-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
           <div class="clip-row-info">
-            <span class="clip-row-song">${clip.song}</span>
+            <span class="clip-row-song">${clip.song || clip.songId || 'Untitled'}</span>
             <span class="clip-row-time">${timeRange} (${formatTimestamp(duration)})</span>
           </div>
         </div>
