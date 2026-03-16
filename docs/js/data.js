@@ -4,24 +4,36 @@
  */
 import { config } from './config.js';
 
+// Cache the JSONBin response so we only fetch once
+let _jsonBinData = null;
+let _jsonBinFetched = false;
+
+async function fetchJsonBin() {
+  if (_jsonBinFetched) return _jsonBinData;
+  _jsonBinFetched = true;
+  if (!config.jsonBinId) return null;
+  try {
+    const resp = await fetch(
+      `https://api.jsonbin.io/v3/b/${config.jsonBinId}?meta=false`
+    );
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    _jsonBinData = await resp.json();
+    return _jsonBinData;
+  } catch (err) {
+    console.warn('JSONBin fetch failed, trying fallback:', err);
+    return null;
+  }
+}
+
 /**
  * Fetch and parse audition clips.
  * Returns { songs, parts, clips, source }
  */
 export async function fetchClips() {
-  // Try JSONBin cloud first
-  if (config.jsonBinId) {
-    try {
-      const resp = await fetch(
-        `https://api.jsonbin.io/v3/b/${config.jsonBinId}?meta=false`
-      );
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const raw = await resp.json();
-      const { songs, parts, clips } = resolveClips(raw);
-      return { songs, parts, clips, source: 'live' };
-    } catch (err) {
-      console.warn('JSONBin fetch failed, trying fallback:', err);
-    }
+  const raw = await fetchJsonBin();
+  if (raw) {
+    const { songs, parts, clips } = resolveClips(raw);
+    return { songs, parts, clips, source: 'live' };
   }
 
   // Fallback to local JSON
@@ -29,14 +41,14 @@ export async function fetchClips() {
     const url = config.clipsDataUrl || './data/clips.json';
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const raw = await resp.json();
+    const localRaw = await resp.json();
 
-    if (Array.isArray(raw)) {
-      const clips = raw.map((c, i) => normalizeClip(c, i));
+    if (Array.isArray(localRaw)) {
+      const clips = localRaw.map((c, i) => normalizeClip(c, i));
       return { songs: [], parts: buildPartsFromClips(clips), clips, source: 'cached' };
     }
 
-    const { songs, parts, clips } = resolveClips(raw);
+    const { songs, parts, clips } = resolveClips(localRaw);
     return { songs, parts, clips, source: 'cached' };
   } catch (err) {
     console.error('Fallback data also failed:', err);
@@ -52,19 +64,8 @@ export async function fetchSides() {
   const sidesPath = config.sidesPath || './sides/';
   const mapSides = (arr) => (arr || []).map(s => ({ ...s, url: `${sidesPath}${s.file}` }));
 
-  // Try JSONBin cloud first (sides are published alongside clips)
-  if (config.jsonBinId) {
-    try {
-      const resp = await fetch(
-        `https://api.jsonbin.io/v3/b/${config.jsonBinId}?meta=false`
-      );
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
-      if (data.sides) return mapSides(data.sides);
-    } catch (err) {
-      console.warn('JSONBin sides fetch failed, trying fallback:', err);
-    }
-  }
+  const raw = await fetchJsonBin();
+  if (raw && raw.sides) return mapSides(raw.sides);
 
   // Fallback to local JSON
   try {
