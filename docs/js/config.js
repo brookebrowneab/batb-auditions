@@ -4,7 +4,7 @@
  */
 export const config = {
   showTitle: 'Beauty and the Beast',
-  showSubtitle: 'Audition Practice Materials',
+  showSubtitle: 'Practice Materials',
   schoolName: 'School Name Middle School',
 
   sheetCsvUrl: '',
