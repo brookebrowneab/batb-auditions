@@ -7,12 +7,11 @@ import { initPlayer } from './player.js';
 import { route, start } from './router.js';
 import { initStickyPlayer, updateStickyPlayer } from './components/stickyPlayer.js';
 import { renderHome } from './views/home.js';
-import { renderSongList } from './views/songList.js';
-import { renderSongDetail } from './views/songDetail.js';
 import { renderSideDetail } from './views/sideDetail.js';
 
 let characterIndex = new Map();
 let sidesData = [];
+let clipsData = [];
 
 async function init() {
   applyConfig();
@@ -29,6 +28,7 @@ async function init() {
 
   const { songs, parts, clips, source } = clipResult;
   sidesData = sides;
+  clipsData = clips;
 
   if (source === 'error' && clips.length === 0) {
     showError('Failed to load audition data. Please try refreshing.');
@@ -46,39 +46,14 @@ async function init() {
   const appContent = document.getElementById('app-content');
 
   route('#/', () => {
-    renderHome(appContent, characterIndex, sidesData);
-    scrollToTop();
-  });
-
-  route('#/character/:name', ({ name }) => {
-    const char = characterIndex.get(name);
-    if (!char) {
-      renderHome(appContent, characterIndex, sidesData);
-      return;
-    }
-    renderSongList(appContent, char, sidesData);
-    scrollToTop();
-  });
-
-  route('#/character/:name/song/:songId', ({ name, songId }) => {
-    const char = characterIndex.get(name);
-    if (!char) {
-      renderHome(appContent, characterIndex, sidesData);
-      return;
-    }
-    const song = char.songs.find(s => s.songId === songId);
-    if (!song) {
-      renderSongList(appContent, char, sidesData);
-      return;
-    }
-    renderSongDetail(appContent, char, song);
+    renderHome(appContent, characterIndex, sidesData, clipsData);
     scrollToTop();
   });
 
   route('#/sides/:id', ({ id }) => {
     const side = sidesData.find(s => s.id === id);
     if (!side) {
-      renderHome(appContent, characterIndex, sidesData);
+      renderHome(appContent, characterIndex, sidesData, clipsData);
       return;
     }
     renderSideDetail(appContent, side);
