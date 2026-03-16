@@ -966,7 +966,7 @@ function createSongRow(song) {
 
   row.innerHTML = `
     <input type="text" class="song-title-input" value="${esc(song.title)}" placeholder="Song title">
-    <span class="song-filename">${esc(song.file || '(no file)')}</span>
+    <input type="text" class="song-file-input" value="${esc(song.file || '')}" placeholder="filename.mp3">
     <input type="text" class="song-sheet-input" value="${esc(song.sheet || '')}" placeholder="sheet.pdf">
     <span class="part-usage">${usageCount} clip${usageCount !== 1 ? 's' : ''}</span>
     <button class="btn-icon btn-delete-song" title="Delete song" ${usageCount > 0 ? 'disabled' : ''}>${ICON_DELETE}</button>
@@ -974,6 +974,15 @@ function createSongRow(song) {
 
   row.querySelector('.song-title-input').addEventListener('change', (e) => {
     song.title = e.target.value.trim() || song.title;
+    saveToLocalStorage();
+  });
+
+  row.querySelector('.song-file-input').addEventListener('change', (e) => {
+    const val = e.target.value.trim();
+    song.file = val;
+    if (val) {
+      song.id = val.replace(/\.mp3$/i, '');
+    }
     saveToLocalStorage();
   });
 
